@@ -1,0 +1,81 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Hide default cursor */
+* {
+  cursor: none !important;
+}
+
+/* Show default cursor for touch devices */
+@media (hover: none) {
+  * {
+    cursor: auto !important;
+  }
+}
+
+/* Add the Harry P font */
+@font-face {
+  font-family: 'Harry P';
+  src: url('./assets/fonts/HARRYP__.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Add the Catto Puroo font */
+@font-face {
+  font-family: 'Catto Puroo';
+  src: url('./assets/fonts/Catto-Puroo.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Add the Sugar Fruit font */
+@font-face {
+  font-family: 'Sugar Fruit';
+  src: url('./assets/fonts/Sugar Fruit.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Add the Doggies-Silhouette-Font font */
+@font-face {
+  font-family: 'Doggies-Silhouette-Font';
+  src: url('./assets/fonts/Doggies-Silhouette-Font.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply Catto Puroo to main headings */
+h1, h2,
+.MuiTypography-h1,
+.MuiTypography-h2 {
+  font-family: 'Catto Puroo', sans-serif !important;
+}
+
+/* Apply Sugar Fruit to smaller headings and text */
+h3, h4, h5, h6,
+.MuiTypography-h3,
+.MuiTypography-h4,
+.MuiTypography-h5,
+.MuiTypography-h6,
+.MuiTypography-body1,
+.MuiTypography-body2,
+p,
+span,
+button {
+  font-family: 'Sugar Fruit', sans-serif !important;
+}
