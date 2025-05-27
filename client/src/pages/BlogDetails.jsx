@@ -170,7 +170,7 @@ const BlogDetails = () => {
           {blog.image && (
             <Box 
               component="img"
-              src={`/uploads/${blog.image}`}
+              src={`http://localhost:5000/uploads/${blog.image}`}
               alt={blog.title}
               sx={{
                 width: '100%',

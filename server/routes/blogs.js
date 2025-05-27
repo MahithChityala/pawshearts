@@ -277,6 +277,22 @@ router.get('/user/me', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/blogs/user/:userId
+// @desc    Get blogs by a specific user ID
+// @access  Public
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const blogs = await Blog.find({ author: userId })
+      .populate('author', 'name businessName')
+      .sort('-createdAt');
+    res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching user blogs by ID:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Placeholder route for blogs
 router.get('/', async (req, res) => {
   try {

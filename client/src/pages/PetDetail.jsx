@@ -173,10 +173,55 @@ function PetDetail() {
       sx={{
         minHeight: '100vh',
         py: 4,
+        pt: 8,
         background: `linear-gradient(135deg, ${alpha('#FFE8F0', 0.9)} 0%, ${alpha('#FFF5E6', 0.9)} 100%)`,
       }}
     >
       <Container maxWidth="lg">
+        {/* Shop Banner */}
+        {pet.seller && (
+          <Box 
+            sx={{ 
+              mb: 3,
+              p: 2,
+              mt: 2,
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              borderRadius: 2,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                transform: 'translateY(-2px)',
+                boxShadow: 2,
+              },
+              transition: 'all 0.3s ease-in-out'
+            }}
+            onClick={() => navigate(`/shop/${pet.seller._id}`)}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+                {pet.seller.businessName || pet.seller.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                View shop details and discover more adorable pets
+              </Typography>
+            </Box>
+            <Button 
+              variant="outlined" 
+              color="primary"
+              sx={{ 
+                borderRadius: '20px',
+                textTransform: 'none',
+                px: 2
+              }}
+            >
+              Visit Shop
+            </Button>
+          </Box>
+        )}
+
         {success && (
           <Alert 
             severity="success" 
@@ -375,34 +420,57 @@ function PetDetail() {
                       disabled={loading}
                       sx={{
                         mt: 'auto',
-                        borderRadius: 2,
+                        borderRadius: '50px',
                         py: 1.5,
-                        backgroundColor: theme.palette.primary.main,
+                        backgroundColor: '#F67280',
                         '&:hover': {
-                          backgroundColor: theme.palette.primary.dark,
+                          backgroundColor: '#F8B195',
+                          transform: 'scale(1.02)'
                         },
+                        transition: 'all 0.3s ease'
                       }}
                     >
-                      {loading ? 'Submitting...' : 'Adopt Me'}
+                      {loading ? 'Submitting...' : 'Adopt Me ❤️'}
                     </Button>
                   )}
                   {pet.status === 'pending' && (
-                    <Typography 
-                      variant="body1" 
-                      color="warning.main"
-                      sx={{ mt: 2, fontWeight: 'medium' }}
-                    >
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip 
+                        label="PENDING" 
+                        color="warning" 
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                      <Typography variant="body1" color="warning.main">
                       This pet has a pending adoption request
                     </Typography>
+                    </Box>
                   )}
                   {pet.status === 'adopted' && (
-                    <Typography 
-                      variant="body1" 
-                      color="success.main"
-                      sx={{ mt: 2, fontWeight: 'medium' }}
-                    >
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip 
+                        label="ADOPTED" 
+                        color="success" 
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                      <Typography variant="body1" color="success.main">
                       This pet has been adopted ❤️
                     </Typography>
+                    </Box>
+                  )}
+                  {pet.status === 'available' && (!user || user.userType !== 'regular') && (
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip 
+                        label="AVAILABLE" 
+                        color="success" 
+                        size="small"
+                        sx={{ fontWeight: 'bold' }}
+                      />
+                      <Typography variant="body1" color="info.main">
+                        Please log in as a regular user to adopt this pet
+                      </Typography>
+                    </Box>
                   )}
                 </Paper>
               </Grid>

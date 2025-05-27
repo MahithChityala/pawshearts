@@ -24,6 +24,7 @@ import CustomCursor from './components/CustomCursor';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import PetShopDetail from './pages/PetShopDetail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiresAuth = true, requiresBusiness = false }) => {
@@ -90,6 +91,7 @@ function App() {
             <Route path="/services" element={<Services />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
+            <Route path="/shop/:id" element={<PetShopDetail />} />
           </Routes>
           <Footer />
         </Router>

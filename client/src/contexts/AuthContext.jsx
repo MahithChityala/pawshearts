@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       console.log('User data received:', response.data);
       setUser(response.data);
       setIsAuthenticated(true);
+      setError(null);
     } catch (error) {
       console.error('Error fetching user:', error.response?.data || error.message);
       if (error.response?.status === 401) {
@@ -40,6 +42,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
       }
+      setError(error.response?.data?.message || 'Failed to fetch user data');
     } finally {
       setLoading(false);
     }
@@ -47,6 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      setError(null);
       console.log('Attempting login...');
       const response = await axios.post('/api/auth/login', {
         email,
@@ -62,15 +66,18 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      setError(errorMessage);
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed'
+        error: errorMessage
       };
     }
   };
 
   const register = async (userData) => {
     try {
+      setError(null);
       console.log('Attempting to register with:', userData);
       const response = await axios.post('/api/auth/register', userData);
       console.log('Registration response:', response.data);
@@ -83,9 +90,11 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || error.response?.data?.details || 'Registration failed';
+      setError(errorMessage);
       return {
         success: false,
-        error: error.response?.data?.message || error.response?.data?.details || 'Registration failed'
+        error: errorMessage
       };
     }
   };
@@ -96,16 +105,18 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setIsAuthenticated(false);
+    setError(null);
   };
 
   const value = {
     user,
     loading,
     isAuthenticated,
+    error,
     login,
     register,
     logout,
-    fetchUser // Expose fetchUser to allow manual refresh
+    fetchUser
   };
 
   return (

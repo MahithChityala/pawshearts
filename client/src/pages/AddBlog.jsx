@@ -64,7 +64,7 @@ const AddBlog = () => {
       }
       tags.forEach(tag => formData.append('tags[]', tag));
 
-      const response = await fetch('/api/blogs', {
+      const response = await fetch('http://localhost:5000/api/blogs', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -74,7 +74,7 @@ const AddBlog = () => {
 
       if (response.ok) {
         const blog = await response.json();
-        navigate(`/blog/${blog._id}`);
+        navigate(`/blogs/${blog._id}`);
       } else {
         const error = await response.json();
         setError(error.message || 'Failed to create blog');

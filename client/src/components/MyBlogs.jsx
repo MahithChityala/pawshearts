@@ -256,7 +256,7 @@ const MyBlogs = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => navigate('/add-blog')}
+            onClick={() => navigate('/blogs/add')}
             sx={{
               bgcolor: '#F4A261',
               borderRadius: 8,
@@ -335,7 +335,7 @@ const MyBlogs = () => {
         </Typography>
         <Button
           variant="contained"
-          onClick={() => navigate('/add-blog')}
+          onClick={() => navigate('/blogs/add')}
           sx={{
             bgcolor: '#F4A261',
             borderRadius: '50px',

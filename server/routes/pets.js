@@ -95,6 +95,25 @@ router.get('/seller', auth, async (req, res) => {
   }
 });
 
+// Get pets listed by a seller/business by user ID (public route)
+router.get('/seller/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Find all pets where this user is the seller
+    const sellerPets = await Pet.find({ seller: userId })
+      .populate('seller', 'name businessName email phoneNumber address')
+      .sort({ createdAt: -1 });
+    
+    console.log(`Found ${sellerPets.length} pets listed by seller:`, userId);
+    
+    res.json(sellerPets);
+  } catch (error) {
+    console.error('Error fetching seller pets:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get a specific pet
 router.get('/:id', async (req, res) => {
   try {
