@@ -46,6 +46,8 @@ function Login() {
   const { login, error: authError } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
+  const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({
@@ -54,17 +56,78 @@ function Login() {
     });
   };
 
+  const validateForm = () => {
+    const errors = {};
+    
+    // Email validation
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    }
+
+    setFormErrors(errors);
+    return { isValid: Object.keys(errors).length === 0, errors };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const validation = validateForm();
+    if (!validation.isValid) {
+      setError('Please fix the errors in the form');
+      return;
+    }
+    
     setLoading(true);
+    setError('');
 
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         navigate('/');
+      } else {
+        // Handle specific error messages
+        if (result.error.toLowerCase().includes('email')) {
+          setFormErrors({ 
+            email: 'Invalid email' 
+          });
+        } else if (result.error.toLowerCase().includes('password')) {
+          setFormErrors({ 
+            password: 'Invalid password' 
+          });
+        } else if (result.error.toLowerCase().includes('invalid')) {
+          setFormErrors({ 
+            email: 'Invalid email',
+            password: 'Invalid password'
+          });
+        } else {
+          setError('Invalid credentials');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
+      if (err.response?.data?.errors) {
+        const serverErrors = err.response.data.errors;
+        setFormErrors(serverErrors);
+        setError('Please fix the errors in the form');
+      } else if (err.response?.status === 401) {
+        setFormErrors({ 
+          password: 'Invalid password' 
+        });
+      } else if (err.response?.status === 404) {
+        setFormErrors({ 
+          email: 'Invalid email' 
+        });
+      } else {
+        setError('Invalid credentials');
+      }
     } finally {
       setLoading(false);
     }
@@ -185,9 +248,9 @@ function Login() {
             </Typography>
           </Box>
 
-          {authError && (
+          {error && (
             <Alert severity="error" sx={{ mb: 2, width: '100%', borderRadius: 2 }}>
-              {authError}
+              {error}
             </Alert>
           )}
 
@@ -204,6 +267,8 @@ function Login() {
               value={formData.email}
               onChange={handleChange}
               variant="outlined"
+              error={!!formErrors.email}
+              helperText={formErrors.email}
               sx={{ 
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2
@@ -222,6 +287,8 @@ function Login() {
               value={formData.password}
               onChange={handleChange}
               variant="outlined"
+              error={!!formErrors.password}
+              helperText={formErrors.password}
               sx={{ 
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2

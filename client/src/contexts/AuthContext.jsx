@@ -18,7 +18,16 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       console.log('Found token in localStorage, setting up axios and fetching user');
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
+      fetchUser().catch(err => {
+        console.error('Error fetching user:', err);
+        // If token is invalid, clear it
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      });
     } else {
       console.log('No token found in localStorage');
       setLoading(false);
@@ -33,6 +42,7 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data);
       setIsAuthenticated(true);
       setError(null);
+      return response.data;
     } catch (error) {
       console.error('Error fetching user:', error.response?.data || error.message);
       if (error.response?.status === 401) {
@@ -43,6 +53,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
       }
       setError(error.response?.data?.message || 'Failed to fetch user data');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -63,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       setIsAuthenticated(true);
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || 'Login failed';
@@ -79,15 +90,31 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       console.log('Attempting to register with:', userData);
-      const response = await axios.post('/api/auth/register', userData);
+      
+      // Set the correct content type for FormData
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+
+      const response = await axios.post('/api/auth/register', userData, config);
       console.log('Registration response:', response.data);
       
       const { token, user } = response.data;
+      
+      // Store token and set up axios headers
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Update auth state
       setUser(user);
       setIsAuthenticated(true);
-      return { success: true };
+      
+      // Fetch user data to ensure we have the complete user object
+      await fetchUser();
+      
+      return { success: true, user };
     } catch (error) {
       console.error('Registration error:', error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || error.response?.data?.details || 'Registration failed';

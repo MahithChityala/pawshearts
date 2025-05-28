@@ -72,6 +72,8 @@ function Register() {
   const [profilePic, setProfilePic] = useState(null);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
 
   const handleUserTypeChange = (e) => {
@@ -94,27 +96,64 @@ function Register() {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.phoneNumber) {
-      return { isValid: false, error: 'Email, password, and phone number are required' };
+    const errors = {};
+    
+    // Email validation
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
     }
 
-    if (formData.password.length < 6) {
-      return { isValid: false, error: 'Password must be at least 6 characters long' };
+    // Password validation
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      return { isValid: false, error: 'Passwords do not match' };
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
     }
 
-    if (userType === 'regular' && (!formData.firstName || !formData.lastName)) {
-      return { isValid: false, error: 'First name and last name are required for individual accounts' };
+    // Phone number validation
+    if (!formData.phoneNumber) {
+      errors.phoneNumber = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
+      errors.phoneNumber = 'Please enter a valid 10-digit phone number';
     }
 
-    if (userType === 'business' && (!formData.businessName || !formData.address)) {
-      return { isValid: false, error: 'Business name and address are required for business accounts' };
+    // Regular user specific validations
+    if (userType === 'regular') {
+      if (!formData.firstName) {
+        errors.firstName = 'First name is required';
+      }
+      if (!formData.lastName) {
+        errors.lastName = 'Last name is required';
+      }
     }
 
-    return { isValid: true };
+    // Business user specific validations
+    if (userType === 'business') {
+      if (!formData.businessName) {
+        errors.businessName = 'Business name is required';
+      }
+      if (!formData.address) {
+        errors.address = 'Business address is required';
+      }
+      if (!formData.licenseNumber) {
+        errors.licenseNumber = 'License number is required for business accounts';
+      }
+      if (!formData.licenseExpiry) {
+        errors.licenseExpiry = 'License expiry date is required for business accounts';
+      }
+    }
+
+    setFormErrors(errors);
+    return { isValid: Object.keys(errors).length === 0, errors };
   };
 
   const handleSubmit = async (e) => {
@@ -122,10 +161,12 @@ function Register() {
     
     const validation = validateForm();
     if (!validation.isValid) {
+      setError('Please fix the errors in the form');
       return;
     }
     
     setLoading(true);
+    setError('');
 
     try {
       // Create a name field from first and last name for regular users
@@ -154,10 +195,49 @@ function Register() {
 
       const result = await register(formDataObj);
       if (result.success) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         navigate('/');
+      } else {
+        // Handle specific error messages
+        if (result.error.toLowerCase().includes('email')) {
+          setFormErrors({ 
+            email: 'Email already exists' 
+          });
+        } else if (result.error.toLowerCase().includes('password')) {
+          setFormErrors({ 
+            password: 'Invalid password format' 
+          });
+        } else if (result.error.toLowerCase().includes('phone')) {
+          setFormErrors({ 
+            phoneNumber: 'Invalid phone number' 
+          });
+        } else if (result.error.toLowerCase().includes('business')) {
+          setFormErrors({ 
+            businessName: 'Business name already exists',
+            licenseNumber: 'Invalid license number'
+          });
+        } else {
+          setError('Invalid registration details');
+        }
       }
     } catch (err) {
       console.error('Registration error:', err);
+      if (err.response?.data?.errors) {
+        const serverErrors = err.response.data.errors;
+        setFormErrors(serverErrors);
+        setError('Please fix the errors in the form');
+      } else if (err.response?.status === 409) {
+        setFormErrors({ 
+          email: 'Email already exists' 
+        });
+      } else if (err.response?.status === 400) {
+        setFormErrors({ 
+          password: 'Invalid password format',
+          phoneNumber: 'Invalid phone number'
+        });
+      } else {
+        setError('Invalid registration details');
+      }
     } finally {
       setLoading(false);
     }
@@ -409,6 +489,8 @@ function Register() {
                   value={formData.email}
                   onChange={handleChange}
                   variant="outlined"
+                  error={!!formErrors.email}
+                  helperText={formErrors.email}
                   sx={{ 
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2
@@ -427,6 +509,8 @@ function Register() {
                   value={formData.phoneNumber}
                   onChange={handleChange}
                   variant="outlined"
+                  error={!!formErrors.phoneNumber}
+                  helperText={formErrors.phoneNumber}
                   sx={{ 
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2
@@ -446,6 +530,8 @@ function Register() {
                   value={formData.password}
                   onChange={handleChange}
                   variant="outlined"
+                  error={!!formErrors.password}
+                  helperText={formErrors.password}
                   sx={{ 
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2
@@ -464,6 +550,8 @@ function Register() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   variant="outlined"
+                  error={!!formErrors.confirmPassword}
+                  helperText={formErrors.confirmPassword}
                   sx={{ 
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2
@@ -514,6 +602,8 @@ function Register() {
                     value={formData.firstName}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.firstName}
+                    helperText={formErrors.firstName}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -532,6 +622,8 @@ function Register() {
                     value={formData.lastName}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.lastName}
+                    helperText={formErrors.lastName}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -554,6 +646,8 @@ function Register() {
                     value={formData.businessName}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.businessName}
+                    helperText={formErrors.businessName}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -587,6 +681,8 @@ function Register() {
                     value={formData.address}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.address}
+                    helperText={formErrors.address}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -604,6 +700,8 @@ function Register() {
                     value={formData.city}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.city}
+                    helperText={formErrors.city}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -621,6 +719,8 @@ function Register() {
                     value={formData.state}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.state}
+                    helperText={formErrors.state}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -638,6 +738,8 @@ function Register() {
                     value={formData.zipCode}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.zipCode}
+                    helperText={formErrors.zipCode}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -656,6 +758,8 @@ function Register() {
                     value={formData.licenseNumber}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.licenseNumber}
+                    helperText={formErrors.licenseNumber}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -676,6 +780,8 @@ function Register() {
                     value={formData.licenseExpiry}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.licenseExpiry}
+                    helperText={formErrors.licenseExpiry}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
@@ -692,6 +798,8 @@ function Register() {
                     value={formData.taxId}
                     onChange={handleChange}
                     variant="outlined"
+                    error={!!formErrors.taxId}
+                    helperText={formErrors.taxId}
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2
