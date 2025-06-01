@@ -306,7 +306,7 @@ function Blog() {
                       <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => navigate(`/blog/${blog._id}`)}
+                        onClick={() => navigate(`/blogs/${blog._id}`)}
                         sx={{ borderRadius: 30, px: 3, '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }, transition: 'all 0.2s ease' }}
                       >
                         Read More
@@ -356,7 +356,7 @@ function Blog() {
                 </Typography>
                 <List>
                   {mostPopular.map((blog) => (
-                    <ListItemButton key={blog._id} onClick={() => navigate(`/blog/${blog._id}`)}>
+                    <ListItemButton key={blog._id} onClick={() => navigate(`/blogs/${blog._id}`)}>
                       <ListItemText
                         primary={blog.title}
                         secondary={`${blog.likes.length} likes`}

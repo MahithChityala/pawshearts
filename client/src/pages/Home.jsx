@@ -602,8 +602,8 @@ const Home = () => {
                             borderBottom: '1px solid rgba(0,0,0,0.08)',
                           }}>
                             <Avatar
-                              src={blog.author.profilePicture}
-                              alt={blog.author.name}
+                              src={blog.author?.profilePicture || '/default-profile.jpg'}
+                              alt={blog.author?.name || 'Anonymous'}
                               sx={{ 
                                 width: 40, 
                                 height: 40, 
@@ -614,7 +614,7 @@ const Home = () => {
                             />
                             <Box>
                               <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#2B2B2B' }}>
-                                {blog.author.name}
+                                {blog.author?.name || 'Anonymous'}
                               </Typography>
                               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                 {format(new Date(blog.createdAt), 'MMM d, yyyy')}

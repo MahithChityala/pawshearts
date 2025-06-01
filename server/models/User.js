@@ -35,13 +35,9 @@ const userSchema = new mongoose.Schema({
     enum: ['regular', 'business', 'admin'],
     default: 'regular'
   },
-  avatar: {
+  profilePicture: {
     type: String,
-    default: 'default-avatar.jpg'
-  },
-  phone: {
-    type: String,
-    trim: true
+    default: 'default-profile.png'
   },
   address: {
     street: String,
@@ -91,14 +87,20 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  verificationStatus: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
+  licenseExpiry: {
+    type: Date
   },
-  verificationNotes: {
+  taxId: {
     type: String,
     trim: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   },
   // Activity tracking
   lastLogin: {
@@ -109,17 +111,14 @@ const userSchema = new mongoose.Schema({
     ip: String,
     device: String
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  profilePicture: {
+  verificationStatus: {
     type: String,
-    default: 'default-profile.jpg'
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  verificationNotes: {
+    type: String,
+    trim: true
   },
   // Business verification
   isVerified: {

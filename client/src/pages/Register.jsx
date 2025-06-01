@@ -144,6 +144,9 @@ function Register() {
       if (!formData.address) {
         errors.address = 'Business address is required';
       }
+      if (!formData.businessType) {
+        errors.businessType = 'Business type is required';
+      }
       if (!formData.licenseNumber) {
         errors.licenseNumber = 'License number is required for business accounts';
       }
@@ -199,44 +202,60 @@ function Register() {
         navigate('/');
       } else {
         // Handle specific error messages
-        if (result.error.toLowerCase().includes('email')) {
+        const errorMessage = result.error.toLowerCase();
+        if (errorMessage.includes('email already exists')) {
           setFormErrors({ 
-            email: 'Email already exists' 
+            email: 'This email is already registered. Please use a different email or try logging in.' 
           });
-        } else if (result.error.toLowerCase().includes('password')) {
+          setError('This email is already registered. Please use a different email or try logging in.');
+        } else if (errorMessage.includes('password')) {
           setFormErrors({ 
-            password: 'Invalid password format' 
+            password: 'Password must be at least 6 characters long and contain a mix of letters and numbers.' 
           });
-        } else if (result.error.toLowerCase().includes('phone')) {
+        } else if (errorMessage.includes('phone')) {
           setFormErrors({ 
-            phoneNumber: 'Invalid phone number' 
+            phoneNumber: 'Please enter a valid 10-digit phone number.' 
           });
-        } else if (result.error.toLowerCase().includes('business')) {
+        } else if (errorMessage.includes('business')) {
           setFormErrors({ 
-            businessName: 'Business name already exists',
-            licenseNumber: 'Invalid license number'
+            businessName: 'This business name is already registered.',
+            licenseNumber: 'Please provide a valid license number.'
           });
         } else {
-          setError('Invalid registration details');
+          setError(result.error || 'Registration failed. Please try again.');
         }
       }
     } catch (err) {
       console.error('Registration error:', err);
-      if (err.response?.data?.errors) {
+      if (err.response?.data?.details?.toLowerCase().includes('email already exists')) {
+        setFormErrors({ 
+          email: 'This email is already registered. Please use a different email or try logging in.' 
+        });
+        setError('This email is already registered. Please use a different email or try logging in.');
+      } else if (err.response?.data?.errors) {
         const serverErrors = err.response.data.errors;
         setFormErrors(serverErrors);
         setError('Please fix the errors in the form');
       } else if (err.response?.status === 409) {
         setFormErrors({ 
-          email: 'Email already exists' 
+          email: 'This email is already registered. Please use a different email or try logging in.' 
         });
+        setError('This email is already registered. Please use a different email or try logging in.');
       } else if (err.response?.status === 400) {
-        setFormErrors({ 
-          password: 'Invalid password format',
-          phoneNumber: 'Invalid phone number'
-        });
+        const validationErrors = {};
+        if (err.response.data.details) {
+          const details = err.response.data.details;
+          if (typeof details === 'string') {
+            if (details.includes('email')) validationErrors.email = 'Please enter a valid email address.';
+            if (details.includes('password')) validationErrors.password = 'Password must be at least 6 characters long.';
+            if (details.includes('phone')) validationErrors.phoneNumber = 'Please enter a valid phone number.';
+            if (details.includes('business')) validationErrors.businessName = 'Please enter a valid business name.';
+            if (details.includes('license')) validationErrors.licenseNumber = 'Please enter a valid license number.';
+          }
+        }
+        setFormErrors(validationErrors);
       } else {
-        setError('Invalid registration details');
+        setError('Registration failed. Please try again later.');
       }
     } finally {
       setLoading(false);

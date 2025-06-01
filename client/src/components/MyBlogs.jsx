@@ -622,7 +622,7 @@ const MyBlogs = () => {
                   <Button
                     variant="contained"
                     size="medium"
-                    onClick={() => navigate(`/blog/${blog._id}`)}
+                    onClick={() => navigate(`/blogs/${blog._id}`)}
                     sx={{
                       mt: 2,
                       borderRadius: '50px',

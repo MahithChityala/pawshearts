@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import PetsIcon from '@mui/icons-material/Pets';
+import AddIcon from '@mui/icons-material/Add';
 
 const petTypes = ['All', 'Dog', 'Cat', 'Bird', 'Fish', 'Small Animal', 'Reptile', 'Other'];
 const petAges = ['All', 'Baby', 'Young', 'Adult', 'Senior'];
@@ -222,22 +223,20 @@ function Pets() {
           {user?.userType === 'business' && (
             <Button
               variant="contained"
-              color="primary"
               onClick={() => navigate('/add-pet')}
               sx={{
                 borderRadius: '50px',
-                px: 4,
                 py: 1.5,
-                backgroundColor: '#F8B195',
+                px: 3,
+                backgroundColor: '#F4A261',
                 '&:hover': {
-                  backgroundColor: '#F67280',
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                  backgroundColor: '#E76F51',
+                  transform: 'scale(1.02)'
                 },
                 transition: 'all 0.3s ease'
               }}
             >
-              Add New Pet 🐾
+              Add New Pet
             </Button>
           )}
         </Box>

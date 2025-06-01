@@ -60,15 +60,30 @@ const PetShopDetail = () => {
       setLoading(true);
       setError('');
 
+      console.log('Fetching shop data for ID:', id);
+
       // Get shop details
       const shopResponse = await axios.get(`http://localhost:5000/api/users/${id}`);
+      console.log('Full Shop Data:', shopResponse.data);
+      console.log('Phone Number Field:', shopResponse.data.phone);
+      console.log('All Shop Fields:', Object.keys(shopResponse.data));
+      
       const shopData = shopResponse.data;
       
       // Ensure ratings are properly populated
-      if (shopData.ratings) {
+      if (shopData.ratings && Array.isArray(shopData.ratings)) {
         const populatedRatings = await Promise.all(
           shopData.ratings.map(async (rating) => {
             try {
+              // Check if userId exists and is valid
+              if (!rating.userId || typeof rating.userId !== 'string') {
+                console.warn('Invalid userId in rating:', rating);
+                return {
+                  ...rating,
+                  userId: { name: 'Anonymous User' }
+                };
+              }
+
               const userResponse = await axios.get(`http://localhost:5000/api/users/${rating.userId}`);
               return {
                 ...rating,
@@ -76,7 +91,11 @@ const PetShopDetail = () => {
               };
             } catch (err) {
               console.error('Error fetching user details:', err);
-              return rating;
+              // Return rating with anonymous user if fetch fails
+              return {
+                ...rating,
+                userId: { name: 'Anonymous User' }
+              };
             }
           })
         );
@@ -87,12 +106,19 @@ const PetShopDetail = () => {
       setReviews(shopData.ratings || []);
 
       // Get shop's pets
+      console.log('Fetching pets for seller ID:', id);
       const petsResponse = await axios.get(`http://localhost:5000/api/pets/seller/${id}`);
+      console.log('Pets data response:', petsResponse.data);
       setPets(petsResponse.data);
 
       setLoading(false);
     } catch (err) {
       console.error('Error fetching shop data:', err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
       setError(err.response?.data?.message || 'Failed to fetch shop details. Please try again later.');
       setLoading(false);
     }
@@ -131,11 +157,18 @@ const PetShopDetail = () => {
         return;
       }
 
+      // Validate shop ID
+      if (!id) {
+        setError('Invalid shop ID');
+        return;
+      }
+
       const response = await axios.post(
         `http://localhost:5000/api/users/${id}/ratings`,
         {
           rating: newReview.rating,
-          review: newReview.review.trim()
+          review: newReview.review.trim(),
+          userId: user._id
         },
         {
           headers: { 
@@ -146,21 +179,16 @@ const PetShopDetail = () => {
       );
 
       if (response.data) {
-        // Update the shop's ratings and average rating
-        setShop(prev => ({
-          ...prev,
-          ratings: response.data.ratings,
-          averageRating: response.data.averageRating
-        }));
-
-        // Update the reviews list with all ratings
-        setReviews(response.data.ratings);
-
         // Clear the form
         setNewReview({ rating: 0, review: '' });
 
         // Show success message
         setSuccess('Review submitted successfully!');
+        
+        // Refresh shop data to show the new review
+        await fetchShopData();
+        
+        // Clear success message after 3 seconds
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
@@ -356,11 +384,18 @@ const PetShopDetail = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <LocationOn color="primary" />
-                      <Typography>{shop.address}</Typography>
+                      <Typography>
+                        {shop.address ? 
+                          `${shop.address.street || ''}, ${shop.address.city || ''}, ${shop.address.state || ''} ${shop.address.zipCode || ''}`
+                          : 'Address not available'
+                        }
+                      </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Phone color="primary" />
-                      <Typography>{shop.phone}</Typography>
+                      <Typography>
+                        {shop.phone || shop.phoneNumber || shop.contactNumber || 'Phone number not available'}
+                      </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Email color="primary" />

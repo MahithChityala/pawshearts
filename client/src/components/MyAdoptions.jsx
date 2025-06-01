@@ -22,6 +22,7 @@ import {
 import axios from 'axios';
 import Chat from './Chat';
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from 'react-router-dom';
 
 const MyAdoptions = () => {
   const theme = useTheme();
@@ -31,6 +32,7 @@ const MyAdoptions = () => {
   const [success, setSuccess] = useState('');
   const [chatDialogOpen, setChatDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && user) {
@@ -214,7 +216,7 @@ const MyAdoptions = () => {
                         borderRadius: '50px',
                         mt: 1
                       }}
-                      onClick={() => window.open(`http://localhost:3000/pet/${adoption.petId._id}`, '_blank')}
+                      onClick={() => navigate(`/pets/${adoption.petId._id}`)}
                     >
                       View Pet Details
                     </Button>

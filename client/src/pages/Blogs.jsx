@@ -354,11 +354,15 @@ function Blogs() {
                           </Typography>
                         )}
                         <Box display="flex" alignItems="center" gap={1} mb={2}>
-                          <Avatar src={blog.author.avatar} alt={blog.author.name} sx={{ width: 36, height: 36 }}>
-                            {blog.author.name[0]}
+                          <Avatar 
+                            src={blog.author?.avatar || '/default-avatar.png'} 
+                            alt={blog.author?.name || 'Anonymous'} 
+                            sx={{ width: 36, height: 36 }}
+                          >
+                            {(blog.author?.name || 'A')[0]}
                           </Avatar>
                           <Typography variant="body2" color="text.secondary">
-                            By {blog.author.name} • {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })} • {blog.readTime} min read
+                            By {blog.author?.name || 'Anonymous'} • {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })} • {blog.readTime || 5} min read
                           </Typography>
                         </Box>
                         <Typography variant="body1" color="text.secondary" paragraph>

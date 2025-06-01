@@ -9,17 +9,22 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Button
+  Button,
+  useTheme,
+  alpha,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Pets as PetsIcon } from '@mui/icons-material';
 
 const MyPets = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const { user } = useAuth();
   const [adoptedPets, setAdoptedPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user } = useAuth();
 
   const fetchAdoptedPets = async () => {
     try {
@@ -152,7 +157,7 @@ const MyPets = () => {
                       borderRadius: '50px',
                       mt: 1
                     }}
-                    onClick={() => window.open(`http://localhost:3000/pet/${pet._id}`, '_blank')}
+                    onClick={() => navigate(`/pets/${pet._id}`)}
                   >
                     View Pet Details
                   </Button>

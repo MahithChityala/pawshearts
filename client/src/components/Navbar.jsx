@@ -185,7 +185,7 @@ const Navbar = () => {
             { path: '/services', icon: <LocalHospitalIcon />, label: 'Services' },
             { path: '/blogs', icon: <ArticleIcon sx={{ mr: 1 }} />, label: 'Blogs' },
             { path: '/communities', icon: <GroupsIcon />, label: 'Communities' },
-            ...(user?.userType === 'business' ? [{ path: '/pets/add', icon: null, label: 'Add Pet' }] : [])
+            ...(user?.userType === 'business' ? [{ path: '/add-pet', icon: null, label: 'Add Pet' }] : [])
           ].map((item) => (
             <Button
               key={item.path}

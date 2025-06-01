@@ -81,10 +81,17 @@ const authController = {
       } = req.body;
 
       // Basic validation
-      if (!email || !password || !phoneNumber || !userType) {
+      const validationErrors = [];
+      
+      if (!email) validationErrors.push('Email is required');
+      if (!password) validationErrors.push('Password is required');
+      if (!phoneNumber) validationErrors.push('Phone number is required');
+      if (!userType) validationErrors.push('User type is required');
+
+      if (validationErrors.length > 0) {
         return res.status(400).json({
           message: 'Validation Error',
-          details: 'Email, password, phone number, and user type are required'
+          details: validationErrors.join(', ')
         });
       }
 
@@ -113,12 +120,21 @@ const authController = {
         });
       }
 
+      // Validate phone number format
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(phoneNumber.replace(/\D/g, ''))) {
+        return res.status(400).json({
+          message: 'Validation Error',
+          details: 'Phone number must be 10 digits'
+        });
+      }
+
       // Check if user already exists
       const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
       if (existingUser) {
         return res.status(400).json({ 
           message: 'Registration failed',
-          details: 'A user with this email already exists'
+          details: 'This email is already registered. Please use a different email or try logging in.'
         });
       }
 
@@ -148,26 +164,38 @@ const authController = {
           name: `${firstName.trim()} ${lastName.trim()}`
         });
       } else if (userType === 'business') {
-        if (!businessName || !address || !businessType) {
+        const businessValidationErrors = [];
+        
+        if (!businessName) businessValidationErrors.push('Business name is required');
+        if (!address) businessValidationErrors.push('Business address is required');
+        if (!businessType) businessValidationErrors.push('Business type is required');
+        if (!licenseNumber) businessValidationErrors.push('License number is required');
+        if (!licenseExpiry) businessValidationErrors.push('License expiry date is required');
+
+        if (businessValidationErrors.length > 0) {
           return res.status(400).json({
             message: 'Validation Error',
-            details: 'Business name, business type, and address are required for business users'
+            details: businessValidationErrors.join(', ')
           });
         }
+
         if (!['shelter', 'shop'].includes(businessType)) {
           return res.status(400).json({
             message: 'Validation Error',
             details: 'Business type must be either "shelter" or "shop"'
           });
         }
+
         Object.assign(userData, {
           businessName: businessName.trim(),
           businessType,
           name: businessName.trim(),
-          address: address.trim(),
-          city: city?.trim(),
-          state: state?.trim(),
-          zipCode: zipCode?.trim(),
+          address: {
+            street: address.trim(),
+            city: city?.trim() || '',
+            state: state?.trim() || '',
+            zipCode: zipCode?.trim() || ''
+          },
           licenseNumber: licenseNumber?.trim(),
           licenseExpiry: licenseExpiry || null,
           taxId: taxId?.trim()
@@ -191,9 +219,10 @@ const authController = {
       console.error('Registration error:', error);
       
       if (error.name === 'ValidationError') {
+        const validationErrors = Object.values(error.errors).map(err => err.message);
         return res.status(400).json({
           message: 'Validation Error',
-          details: Object.values(error.errors).map(err => err.message)
+          details: validationErrors.join(', ')
         });
       }
       
