@@ -7,6 +7,10 @@ const AppError = require('../utils/appError');
 exports.createCommunity = catchAsync(async (req, res, next) => {
   const { name, description, rules, isPrivate } = req.body;
   
+  // Log the file information for debugging
+  console.log('File upload info:', req.file);
+  console.log('Processed file URL:', req.fileUrl);
+  
   const community = await Community.create({
     name,
     description,
@@ -15,8 +19,11 @@ exports.createCommunity = catchAsync(async (req, res, next) => {
     creator: req.user._id,
     members: [req.user._id],
     moderators: [req.user._id],
-    image: req.file ? `/uploads/communities/${req.file.filename}` : ''
+    image: req.fileUrl || '' // Store just the filename
   });
+
+  // Log the created community for debugging
+  console.log('Created community:', community);
 
   res.status(201).json({
     status: 'success',
@@ -163,7 +170,7 @@ exports.updateCommunity = catchAsync(async (req, res, next) => {
     req.params.id,
     {
       ...req.body,
-      image: req.file ? `/uploads/communities/${req.file.filename}` : community.image
+      image: req.fileUrl || community.image // Store just the filename
     },
     { new: true, runValidators: true }
   );

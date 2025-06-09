@@ -64,7 +64,13 @@ router.get('/user', auth, authController.getCurrentUser);
 // Update profile route
 router.put('/profile', auth, upload.single('profilePicture'), async (req, res) => {
   try {
-    const { name, email, phoneNumber, address } = req.body;
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      phoneNumber
+    } = req.body;
+
     const userId = req.user.id;
 
     // Find user and check if email is already taken by another user
@@ -75,17 +81,27 @@ router.put('/profile', auth, upload.single('profilePicture'), async (req, res) =
       }
     }
 
+    // Handle address fields
+    const address = {
+      street: req.body.street || '',
+      city: req.body.city || '',
+      state: req.body.state || '',
+      country: req.body.country || 'United States',
+      zipCode: req.body.zipCode || ''
+    };
+
     // Update user data
     const updateData = {
-      name,
+      firstName,
+      lastName,
       email,
       phoneNumber,
-      address,
+      address
     };
 
     // Add profile picture path if uploaded
     if (req.file) {
-      updateData.profilePicture = `http://localhost:5000/uploads/profiles/${req.file.filename}`;
+      updateData.profilePicture = req.file.filename;
     }
 
     const user = await User.findByIdAndUpdate(

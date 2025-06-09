@@ -158,10 +158,32 @@ const authController = {
             details: 'First name and last name are required for regular users'
           });
         }
+
+        // Validate address fields for regular users
+        const addressValidationErrors = [];
+        if (!address) addressValidationErrors.push('Street address is required');
+        if (!city) addressValidationErrors.push('City is required');
+        if (!state) addressValidationErrors.push('State is required');
+        if (!zipCode) addressValidationErrors.push('Zip code is required');
+
+        if (addressValidationErrors.length > 0) {
+          return res.status(400).json({
+            message: 'Validation Error',
+            details: addressValidationErrors.join(', ')
+          });
+        }
+
         Object.assign(userData, {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          name: `${firstName.trim()} ${lastName.trim()}`
+          name: `${firstName.trim()} ${lastName.trim()}`,
+          address: {
+            street: address.trim(),
+            city: city.trim(),
+            state: state.trim(),
+            country: 'United States', // Default to US for now
+            zipCode: zipCode.trim()
+          }
         });
       } else if (userType === 'business') {
         const businessValidationErrors = [];

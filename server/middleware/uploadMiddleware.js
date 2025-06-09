@@ -7,17 +7,20 @@ const AppError = require('../utils/appError');
 // Set storage engine for local uploads
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    const uploadDir = 'uploads/communities/';
+    // Use absolute path for uploads directory
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'communities');
     
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
+    console.log('Uploading file to:', uploadDir);
     cb(null, uploadDir);
   },
   filename: function(req, file, cb) {
     const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
+    console.log('Generated filename:', uniqueFilename);
     cb(null, uniqueFilename);
   }
 });
@@ -86,22 +89,10 @@ exports.handleMulterError = (err, req, res, next) => {
 
 // Process uploaded files and add URLs to req object
 exports.processUploadedFiles = (req, res, next) => {
-  const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
-  
   if (req.file) {
-    req.fileUrl = `${baseUrl}${req.file.filename}`;
+    console.log('Processing file:', req.file);
+    // Store just the filename in the database
+    req.fileUrl = req.file.filename;
   }
-  
-  if (req.files && Array.isArray(req.files)) {
-    req.fileUrls = req.files.map(file => `${baseUrl}${file.filename}`);
-  }
-  
-  if (req.files && !Array.isArray(req.files)) {
-    req.processedFiles = {};
-    Object.keys(req.files).forEach(key => {
-      req.processedFiles[key] = req.files[key].map(file => `${baseUrl}${file.filename}`);
-    });
-  }
-  
   next();
 }; 

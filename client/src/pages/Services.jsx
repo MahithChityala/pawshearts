@@ -59,12 +59,14 @@ const Services = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [userAddress, setUserAddress] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [viewport, setViewport] = useState({
-    latitude: 37.7749,  // Default latitude (San Francisco)
-    longitude: -122.4194, // Default longitude (San Francisco)
+    latitude: 17.3850,  // Default latitude (Hyderabad)
+    longitude: 78.4867, // Default longitude (Hyderabad)
     zoom: 13
   });
+  const [geolocationError, setGeolocationError] = useState(null);
 
   // Helper function to format address
   const formatAddress = (address) => {
@@ -73,17 +75,42 @@ const Services = () => {
     return `${street}, ${city}, ${state}, ${country} ${zipCode}`;
   };
 
+  // Helper function to get address from coordinates
+  const getAddressFromCoordinates = async (lat, lng) => {
+    try {
+      const response = await axios.get(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.REACT_APP_MAPBOX_TOKEN}`
+      );
+      
+      if (response.data && response.data.features && response.data.features.length > 0) {
+        const address = response.data.features[0].place_name;
+        setUserAddress(address);
+        return address;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting address:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
           console.log('Got user location:', location);
           setUserLocation(location);
+          setGeolocationError(null);
+          
+          // Get address from coordinates
+          const address = await getAddressFromCoordinates(location.lat, location.lng);
+          console.log('User address:', address);
+          
           setViewport({
             latitude: location.lat,
             longitude: location.lng,
@@ -92,15 +119,39 @@ const Services = () => {
         },
         (error) => {
           console.error('Error getting location:', error);
-          // Set default location to San Francisco if geolocation fails
-          const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+          let errorMessage = 'Unable to get your location. ';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Please enable location access in your browser settings to see services near you.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Location request timed out.';
+              break;
+            default:
+              errorMessage += 'An unknown error occurred.';
+          }
+          
+          setGeolocationError(errorMessage);
+          
+          // Set default location to Hyderabad if geolocation fails
+          const defaultLocation = { lat: 17.3850, lng: 78.4867 };
           console.log('Using default location:', defaultLocation);
           setUserLocation(defaultLocation);
+          setUserAddress('Hyderabad, Telangana, India');
           setViewport({
             latitude: defaultLocation.lat,
             longitude: defaultLocation.lng,
             zoom: 13
           });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         }
       );
     }
@@ -194,6 +245,33 @@ const Services = () => {
     boxShadow: '0 0 5px rgba(0,0,0,0.3)'
   });
 
+  const handleRequestLocation = () => {
+    setGeolocationError(null);
+    // Trigger the geolocation request again
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setUserLocation(location);
+          setGeolocationError(null);
+          
+          const address = await getAddressFromCoordinates(location.lat, location.lng);
+          setViewport({
+            latitude: location.lat,
+            longitude: location.lng,
+            zoom: 13
+          });
+        },
+        (error) => {
+          setGeolocationError('Please enable location access in your browser settings to see services near you.');
+        }
+      );
+    }
+  };
+
   return (
     <Box sx={{ 
       mt: '64px', // Height of navbar
@@ -202,14 +280,43 @@ const Services = () => {
       pb: 4
     }}>
       <Container maxWidth="xl" sx={{ pt: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ 
-          color: theme.palette.primary.main,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          mb: 4
-        }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" gutterBottom>
           Pet Services Near You
         </Typography>
+          {geolocationError ? (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              mb: 2,
+              backgroundColor: theme.palette.error.light,
+              color: theme.palette.error.contrastText,
+              p: 2,
+              borderRadius: 1
+            }}>
+              <LocationOn />
+              <Typography variant="body1">
+                {geolocationError}
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleRequestLocation}
+                size="small"
+              >
+                Enable Location
+              </Button>
+            </Box>
+          ) : userAddress && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <LocationOn color="primary" />
+              <Typography variant="body1" color="text.secondary">
+                Your location: {userAddress}
+              </Typography>
+            </Box>
+          )}
+        </Box>
 
         <Grid container spacing={3}>
           {/* Service Types List */}
@@ -284,6 +391,33 @@ const Services = () => {
                   onMove={evt => setViewport(evt.viewState)}
                 >
                   <NavigationControl position='top-right' />
+                  
+                  {/* User Location Marker */}
+                  {userLocation && (
+                    <Marker
+                      longitude={userLocation.lng}
+                      latitude={userLocation.lat}
+                    >
+                      <div style={{
+                        backgroundColor: '#2196f3',
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        border: '3px solid white',
+                        boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{
+                          backgroundColor: 'white',
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%'
+                        }} />
+                      </div>
+                    </Marker>
+                  )}
                   
                   {services && services.length > 0 && services.map((service) => {
                     if (!service.location || !service.location.coordinates) {

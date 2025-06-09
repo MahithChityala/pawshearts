@@ -66,7 +66,7 @@ const App = () => {
             <Route path="/blogs/:id" element={<BlogDetails />} />
             <Route path="/services" element={<Services />} />
             <Route path="/communities" element={<Communities />} />
-            <Route path="/community/:id" element={<CommunityDetail />} />
+            <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/shop/:id" element={<PetShopDetail />} />
             
             {/* Protected Routes */}

@@ -12,8 +12,10 @@ import { format } from 'date-fns';
 
 // Helper function to format address
 const formatAddress = (address) => {
-  if (!address) return 'No address provided';
-  const { street, city, state, country, zipCode } = address;
+  if (!address || !address.street || !address.city || !address.state || !address.zipCode) {
+    return 'No address provided';
+  }
+  const { street, city, state, country = 'United States', zipCode } = address;
   return `${street}, ${city}, ${state}, ${country} ${zipCode}`;
 };
 

@@ -135,6 +135,21 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  // Add this function to update user data in context
+  const updateUser = (updatedUserData) => {
+    setUser(prevUser => {
+      if (!prevUser) return updatedUserData;
+      return {
+        ...prevUser,
+        ...updatedUserData,
+        address: {
+          ...prevUser.address,
+          ...updatedUserData.address
+        }
+      };
+    });
+  };
+
   const value = {
     user,
     loading,
@@ -143,7 +158,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    fetchUser
+    fetchUser,
+    updateUser
   };
 
   return (

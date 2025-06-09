@@ -61,10 +61,13 @@ function Register() {
     lastName: '',
     businessName: '',
     businessType: 'shelter',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      country: '',
+      zipCode: ''
+    },
     licenseNumber: '',
     licenseExpiry: '',
     taxId: '',
@@ -81,10 +84,24 @@ function Register() {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    
+    // Handle nested address fields
+    if (name.startsWith('address.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [field]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleProfilePicChange = (e) => {
@@ -141,7 +158,7 @@ function Register() {
       if (!formData.businessName) {
         errors.businessName = 'Business name is required';
       }
-      if (!formData.address) {
+      if (!formData.address.street) {
         errors.address = 'Business address is required';
       }
       if (!formData.businessType) {
@@ -183,7 +200,14 @@ function Register() {
       
       // Append all form fields
       Object.keys(formData).forEach(key => {
-        if (key !== 'confirmPassword') {
+        if (key === 'address') {
+          // Send address fields individually
+          formDataObj.append('address', formData.address.street);
+          formDataObj.append('city', formData.address.city);
+          formDataObj.append('state', formData.address.state);
+          formDataObj.append('country', formData.address.country);
+          formDataObj.append('zipCode', formData.address.zipCode);
+        } else if (key !== 'confirmPassword') {
           formDataObj.append(key, formData[key]);
         }
       });
@@ -227,33 +251,38 @@ function Register() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      if (err.response?.data?.details?.toLowerCase().includes('email already exists')) {
-        setFormErrors({ 
-          email: 'This email is already registered. Please use a different email or try logging in.' 
-        });
-        setError('This email is already registered. Please use a different email or try logging in.');
-      } else if (err.response?.data?.errors) {
-        const serverErrors = err.response.data.errors;
-        setFormErrors(serverErrors);
-        setError('Please fix the errors in the form');
-      } else if (err.response?.status === 409) {
-        setFormErrors({ 
-          email: 'This email is already registered. Please use a different email or try logging in.' 
-        });
-        setError('This email is already registered. Please use a different email or try logging in.');
-      } else if (err.response?.status === 400) {
-        const validationErrors = {};
-        if (err.response.data.details) {
-          const details = err.response.data.details;
-          if (typeof details === 'string') {
-            if (details.includes('email')) validationErrors.email = 'Please enter a valid email address.';
-            if (details.includes('password')) validationErrors.password = 'Password must be at least 6 characters long.';
-            if (details.includes('phone')) validationErrors.phoneNumber = 'Please enter a valid phone number.';
-            if (details.includes('business')) validationErrors.businessName = 'Please enter a valid business name.';
-            if (details.includes('license')) validationErrors.licenseNumber = 'Please enter a valid license number.';
+      
+      // Handle validation errors with specific field messages
+      if (err.response?.status === 400) {
+        const details = err.response.data.details;
+        if (typeof details === 'string') {
+          // Parse the details string to extract field-specific errors
+          const fieldErrors = {};
+          
+          if (details.includes('City is required')) {
+            fieldErrors['address.city'] = 'City is required';
           }
+          if (details.includes('State is required')) {
+            fieldErrors['address.state'] = 'State is required';
+          }
+          if (details.includes('Zip code is required')) {
+            fieldErrors['address.zipCode'] = 'ZIP code is required';
+          }
+          if (details.includes('Street is required')) {
+            fieldErrors['address.street'] = 'Street address is required';
+          }
+          if (details.includes('Country is required')) {
+            fieldErrors['address.country'] = 'Country is required';
+          }
+          
+          setFormErrors(fieldErrors);
+          setError('Please fill in all required address fields');
+        } else if (err.response.data.errors) {
+          setFormErrors(err.response.data.errors);
+          setError('Please fix the errors in the form');
         }
-        setFormErrors(validationErrors);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
         setError('Registration failed. Please try again later.');
       }
@@ -650,6 +679,71 @@ function Register() {
                     }}
                   />
                 </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#F67280' }}>
+                    Address Information
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Street Address"
+                    name="address.street"
+                    value={formData.address.street}
+                    onChange={handleChange}
+                    error={!!formErrors['address.street']}
+                    helperText={formErrors['address.street']}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="City"
+                    name="address.city"
+                    value={formData.address.city}
+                    onChange={handleChange}
+                    error={!!formErrors['address.city']}
+                    helperText={formErrors['address.city']}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="State"
+                    name="address.state"
+                    value={formData.address.state}
+                    onChange={handleChange}
+                    error={!!formErrors['address.state']}
+                    helperText={formErrors['address.state']}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Country"
+                    name="address.country"
+                    value={formData.address.country}
+                    onChange={handleChange}
+                    error={!!formErrors['address.country']}
+                    helperText={formErrors['address.country']}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="ZIP Code"
+                    name="address.zipCode"
+                    value={formData.address.zipCode}
+                    onChange={handleChange}
+                    error={!!formErrors['address.zipCode']}
+                    helperText={formErrors['address.zipCode']}
+                    required
+                  />
+                </Grid>
               </Grid>
             ) : (
               // Business user fields
@@ -690,80 +784,68 @@ function Register() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#F67280' }}>
+                    Address Information
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
                   <TextField
-                    required
                     fullWidth
-                    id="address"
                     label="Street Address"
-                    name="address"
-                    autoComplete="street-address"
-                    value={formData.address}
+                    name="address.street"
+                    value={formData.address.street}
                     onChange={handleChange}
-                    variant="outlined"
-                    error={!!formErrors.address}
-                    helperText={formErrors.address}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
+                    error={!!formErrors['address.street']}
+                    helperText={formErrors['address.street']}
+                    required
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    id="city"
                     label="City"
-                    name="city"
-                    autoComplete="address-level2"
-                    value={formData.city}
+                    name="address.city"
+                    value={formData.address.city}
                     onChange={handleChange}
-                    variant="outlined"
-                    error={!!formErrors.city}
-                    helperText={formErrors.city}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
+                    error={!!formErrors['address.city']}
+                    helperText={formErrors['address.city']}
+                    required
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    id="state"
                     label="State"
-                    name="state"
-                    autoComplete="address-level1"
-                    value={formData.state}
+                    name="address.state"
+                    value={formData.address.state}
                     onChange={handleChange}
-                    variant="outlined"
-                    error={!!formErrors.state}
-                    helperText={formErrors.state}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
+                    error={!!formErrors['address.state']}
+                    helperText={formErrors['address.state']}
+                    required
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    id="zipCode"
-                    label="Zip Code"
-                    name="zipCode"
-                    autoComplete="postal-code"
-                    value={formData.zipCode}
+                    label="Country"
+                    name="address.country"
+                    value={formData.address.country}
                     onChange={handleChange}
-                    variant="outlined"
-                    error={!!formErrors.zipCode}
-                    helperText={formErrors.zipCode}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
+                    error={!!formErrors['address.country']}
+                    helperText={formErrors['address.country']}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="ZIP Code"
+                    name="address.zipCode"
+                    value={formData.address.zipCode}
+                    onChange={handleChange}
+                    error={!!formErrors['address.zipCode']}
+                    helperText={formErrors['address.zipCode']}
+                    required
                   />
                 </Grid>
                 

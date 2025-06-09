@@ -211,17 +211,40 @@ const Communities = () => {
           const isMember = community.members.some(member =>
             typeof member === 'string' ? member === user?._id : member?._id === user?._id
           );
+          
           const imageUrl = community.image
-            ? (community.image.startsWith('http') ? community.image : `http://localhost:5000${community.image}`)
-            : 'http://localhost:5000/uploads/default-community.jpg';
+            ? (community.image.startsWith('http') 
+                ? community.image 
+                : `http://localhost:5000/uploads/communities/${community.image}`)
+            : 'https://placehold.co/600x400?text=Community+Image';
+          
+          console.log('Community Image Debug:', {
+            communityId: community._id,
+            imageField: community.image,
+            constructedUrl: imageUrl
+          });
+          
           return (
             <Grid item xs={12} sm={6} md={4} key={community._id}>
-              <Card sx={{ cursor: 'pointer' }} onClick={() => navigate(`/communities/${community._id}`)}>
+              <Card sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'transform 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4
+                }
+              }}>
                 <CardMedia
                   component="img"
                   height="140"
                   image={imageUrl}
                   alt={community.name}
+                  onError={(e) => {
+                    console.error('Image failed to load:', imageUrl);
+                    e.target.src = 'https://placehold.co/600x400?text=Community+Image';
+                  }}
                 />
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="h2">

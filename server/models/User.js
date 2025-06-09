@@ -40,11 +40,36 @@ const userSchema = new mongoose.Schema({
     default: 'default-profile.png'
   },
   address: {
-    street: String,
-    city: String,
-    state: String,
-    country: String,
-    zipCode: String
+    street: {
+      type: String,
+      required: function() {
+        return this.userType === 'regular';
+      }
+    },
+    city: {
+      type: String,
+      required: function() {
+        return this.userType === 'regular';
+      }
+    },
+    state: {
+      type: String,
+      required: function() {
+        return this.userType === 'regular';
+      }
+    },
+    country: {
+      type: String,
+      required: function() {
+        return this.userType === 'regular';
+      }
+    },
+    zipCode: {
+      type: String,
+      required: function() {
+        return this.userType === 'regular';
+      }
+    }
   },
   // Regular user fields
   firstName: {

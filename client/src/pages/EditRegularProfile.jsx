@@ -55,7 +55,7 @@ const EditRegularProfile = () => {
           zipCode: user.address?.zipCode || ''
         }
       });
-      setPreviewUrl(user.profilePicture ? `http://localhost:5000/uploads/${user.profilePicture}` : '');
+      setPreviewUrl(user.profilePicture ? `http://localhost:5000/uploads/profiles/${user.profilePicture}` : '');
     }
   }, [user]);
 
@@ -98,7 +98,10 @@ const EditRegularProfile = () => {
       // Append all form fields
       Object.keys(formData).forEach(key => {
         if (key === 'address') {
-          formDataObj.append('address', JSON.stringify(formData.address));
+          // Send address fields individually
+          Object.keys(formData.address).forEach(addressField => {
+            formDataObj.append(addressField, formData.address[addressField]);
+          });
         } else {
           formDataObj.append(key, formData[key]);
         }
@@ -111,7 +114,7 @@ const EditRegularProfile = () => {
 
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        'http://localhost:5000/api/users/profile',
+        'http://localhost:5000/api/auth/profile',
         formDataObj,
         {
           headers: {
@@ -121,7 +124,7 @@ const EditRegularProfile = () => {
         }
       );
 
-      // Update user context
+      // Update user context with the new data
       updateUser(response.data);
       
       setSuccess('Profile updated successfully!');
@@ -134,6 +137,14 @@ const EditRegularProfile = () => {
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
